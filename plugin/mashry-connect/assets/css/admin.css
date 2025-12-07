@@ -1,0 +1,405 @@
+/* Admin styles for mashry Connect */
+.mashry-settings-form {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #ccd0d4;
+    margin-top: 30px;
+    max-width: 600px;
+    border-radius: 5px;
+}
+
+.mashry-settings-form input {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 15px 0;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.mashry-migration-container {
+    margin-top: 40px; 
+    padding: 25px; 
+    background: #fff; 
+    border-radius: 5px;
+    border: 1px solid #ccd0d4;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.mashry-migration-log {
+    max-height: 300px; 
+    overflow-y: auto; 
+    background: white; 
+    padding: 15px; 
+    margin-top: 20px; 
+    border-radius: 5px; 
+    display: none;
+    border: 1px solid #dee2e6;
+}
+
+.mashry-tab-container {
+    margin: 20px 0;
+}
+
+.mashry-tab-buttons {
+    display: flex;
+    border-bottom: 2px solid #dee2e6;
+    margin-bottom: -1px;
+}
+
+.mashry-tab-button {
+    padding: 12px 24px;
+    background: #f8f9fa;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #495057;
+    transition: all 0.3s;
+}
+
+.mashry-tab-button:hover {
+    background: #e9ecef;
+    color: #495057;
+}
+
+.mashry-tab-button.active {
+    background: white;
+    border-bottom-color: #2271b1;
+    font-weight: 600;
+    color: #2271b1;
+}
+
+.mashry-tab-content {
+    display: none;
+    padding: 25px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-top: none;
+    border-radius: 0 0 5px 5px;
+}
+
+.mashry-tab-content.active {
+    display: block;
+}
+
+.mashry-btn {
+    padding: 10px 20px;
+    background: #2271b1;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mashry-btn:hover {
+    background: #135e96;
+    color: white;
+}
+
+.mashry-btn:disabled {
+    background: #cccccc;
+    cursor: not-allowed;
+}
+
+.mashry-btn-secondary {
+    background: #6c757d;
+}
+
+.mashry-btn-secondary:hover {
+    background: #5a6268;
+}
+
+.mashry-btn-success {
+    background: #28a745;
+}
+
+.mashry-btn-success:hover {
+    background: #218838;
+}
+
+.mashry-btn-danger {
+    background: #dc3545;
+}
+
+.mashry-btn-danger:hover {
+    background: #c82333;
+}
+
+.mashry-btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.mashry-btn-warning:hover {
+    background: #e0a800;
+    color: #212529;
+}
+
+.mashry-preview-box {
+    background: #f8f9fa;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.mashry-preview-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    font-size: 14px;
+    background: white;
+}
+
+.mashry-preview-table th {
+    background: #f8f9fa;
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+    font-weight: 600;
+    color: #495057;
+}
+
+.mashry-preview-table td {
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    vertical-align: middle;
+    color: #212529;
+}
+
+.mashry-preview-table tr:hover {
+    background-color: #f8f9fa;
+}
+
+.mashry-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+    background: white;
+}
+
+.mashry-stats-table td {
+    padding: 12px;
+    border: 1px solid #dee2e6;
+}
+
+.mashry-stats-table td:first-child {
+    background: #f8f9fa;
+    font-weight: 600;
+    width: 200px;
+    color: #495057;
+}
+
+.mashry-progress-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mashry-progress-bar-bg {
+    flex: 1;
+    background: #e9ecef;
+    height: 10px;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.mashry-progress-bar-fill {
+    height: 100%;
+    background: #28a745;
+    border-radius: 5px;
+    transition: width 0.3s ease;
+}
+
+.mashry-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.mashry-status-publish {
+    background: #d4edda;
+    color: #155724;
+}
+
+.mashry-status-draft {
+    background: #f8f9fa;
+    color: #6c757d;
+}
+
+.mashry-status-private {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.mashry-view-link {
+    color: #007bff;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 500;
+}
+
+.mashry-view-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.mashry-control-group {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin: 25px 0;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.mashry-control-label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    color: #495057;
+}
+
+.mashry-select {
+    padding: 10px 15px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    background: white;
+    font-size: 14px;
+    min-width: 200px;
+}
+
+.mashry-button-group {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.mashry-section-title {
+    color: #2271b1;
+    border-bottom: 2px solid #2271b1;
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+.mashry-log-entry {
+    padding: 8px 0;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.mashry-log-time {
+    color: #6c757d;
+    font-size: 12px;
+    min-width: 85px;
+}
+
+.mashry-log-message {
+    flex: 1;
+}
+
+.mashry-log-info { color: #17a2b8; }
+.mashry-log-success { color: #28a745; }
+.mashry-log-warning { color: #ffc107; }
+.mashry-log-error { color: #dc3545; }
+
+.mashry-server-test-result {
+    margin-top: 15px;
+    padding: 12px;
+    border-radius: 5px;
+    display: none;
+}
+
+.mashry-server-test-success {
+    background: #d4edda;
+    color: #155724;
+    border: 1px solid #c3e6cb;
+}
+
+.mashry-server-test-error {
+    background: #f8d7da;
+    color: #721c24;
+    border: 1px solid #f5c6cb;
+}
+
+.mashry-file-downloads {
+    margin-top: 20px;
+    padding: 15px;
+    background: #e9ecef;
+    border-radius: 5px;
+    border: 1px solid #dee2e6;
+}
+
+.mashry-download-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+}
+
+.mashry-download-filename {
+    font-weight: 500;
+    color: #495057;
+}
+
+.mashry-download-size {
+    color: #6c757d;
+    font-size: 12px;
+}
+
+.mashry-download-link {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.mashry-download-link:hover {
+    text-decoration: underline;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mashry-control-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .mashry-tab-buttons {
+        flex-wrap: wrap;
+    }
+    
+    .mashry-tab-button {
+        flex: 1;
+        min-width: 120px;
+        text-align: center;
+    }
+    
+    .mashry-button-group {
+        flex-direction: column;
+    }
+    
+    .mashry-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
