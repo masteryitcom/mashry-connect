@@ -21,8 +21,9 @@ function mashry_connect_export_products(WP_REST_Request $request) {
         case 'migrate_batch':
             $batch_number = isset($params['batch']) ? (int)$params['batch'] : 1;
             $batch_size = isset($params['batch_size']) ? (int)$params['batch_size'] : 500;
-            return rest_ensure_response(mashry_connect_migrate_batch('products', $batch_number, $batch_size));
-            
+            $force_restart = isset($params['force_restart']) ? (bool)$params['force_restart'] : false;
+            return rest_ensure_response(mashry_connect_migrate_batch('products', $batch_number, $batch_size, $force_restart));
+                    
         case 'migration_status':
             return rest_ensure_response(mashry_connect_get_migration_status('products'));
             

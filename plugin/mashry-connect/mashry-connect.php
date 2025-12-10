@@ -15,7 +15,8 @@ if (!defined('ABSPATH')) {
 // Define API Key
 define('MASHRY_CONNECT_API_KEY', 'mashry-secret-static-key-here-123');
 
-// Include required files
+// Include required files - helpers must be loaded first
+require_once plugin_dir_path(__FILE__) . 'includes/helpers.php';
 require_once plugin_dir_path(__FILE__) . 'includes/migration-tracking.php';
 require_once plugin_dir_path(__FILE__) . 'includes/users-export.php';
 require_once plugin_dir_path(__FILE__) . 'includes/products-export.php';
@@ -57,7 +58,29 @@ add_action('rest_api_init', function() {
                 return $key === MASHRY_CONNECT_API_KEY;
             }
             return false;
-        }
+        },
+        'args' => [
+            'action' => [
+                'required' => false,
+                'default' => 'preview',
+                'sanitize_callback' => 'sanitize_text_field'
+            ],
+            'batch_size' => [
+                'required' => false,
+                'default' => 500,
+                'type' => 'integer'
+            ],
+            'batch' => [
+                'required' => false,
+                'default' => 1,
+                'type' => 'integer'
+            ],
+            'force_restart' => [
+                'required' => false,
+                'default' => false,
+                'type' => 'boolean'
+            ]
+        ]
     ]);
     
     // Products endpoints
@@ -71,7 +94,29 @@ add_action('rest_api_init', function() {
                 return $key === MASHRY_CONNECT_API_KEY;
             }
             return false;
-        }
+        },
+        'args' => [
+            'action' => [
+                'required' => false,
+                'default' => 'preview',
+                'sanitize_callback' => 'sanitize_text_field'
+            ],
+            'batch_size' => [
+                'required' => false,
+                'default' => 500,
+                'type' => 'integer'
+            ],
+            'batch' => [
+                'required' => false,
+                'default' => 1,
+                'type' => 'integer'
+            ],
+            'force_restart' => [
+                'required' => false,
+                'default' => false,
+                'type' => 'boolean'
+            ]
+        ]
     ]);
     
     // Categories endpoints
@@ -85,7 +130,29 @@ add_action('rest_api_init', function() {
                 return $key === MASHRY_CONNECT_API_KEY;
             }
             return false;
-        }
+        },
+        'args' => [
+            'action' => [
+                'required' => false,
+                'default' => 'preview',
+                'sanitize_callback' => 'sanitize_text_field'
+            ],
+            'batch_size' => [
+                'required' => false,
+                'default' => 500,
+                'type' => 'integer'
+            ],
+            'batch' => [
+                'required' => false,
+                'default' => 1,
+                'type' => 'integer'
+            ],
+            'force_restart' => [
+                'required' => false,
+                'default' => false,
+                'type' => 'boolean'
+            ]
+        ]
     ]);
     
     // Test server endpoint
@@ -99,10 +166,15 @@ add_action('rest_api_init', function() {
                 return $key === MASHRY_CONNECT_API_KEY;
             }
             return false;
-        }
+        },
+        'args' => [
+            'server_url' => [
+                'required' => true,
+                'sanitize_callback' => 'esc_url_raw'
+            ]
+        ]
     ]);
 });
-
 // AJAX handler for saving server settings
 add_action('wp_ajax_mashry_save_server_settings', function() {
     if (!current_user_can('manage_options')) {
@@ -120,6 +192,46 @@ add_filter('plugin_action_links_' . plugin_basename(__FILE__), function($links) 
     $settings_link = '<a href="' . admin_url('options-general.php?page=mashry-connect-settings') . '">Settings</a>';
     array_unshift($links, $settings_link);
     return $links;
+});
+
+// Enqueue admin scripts and styles
+add_action('admin_enqueue_scripts', function($page) {
+    // Only on our settings page
+    if ($page !== 'settings_page_mashry-connect-settings') {
+        return;
+    }
+    
+    // Enqueue jQuery
+    wp_enqueue_script('jquery');
+    
+    // Enqueue CSS
+    wp_enqueue_style(
+        'mashry-connect-admin',
+        plugin_dir_url(__FILE__) . 'assets/css/admin.css',
+        [],
+        '1.0.0'
+    );
+    
+    // Enqueue JavaScript
+    wp_enqueue_script(
+        'mashry-connect-admin',
+        plugin_dir_url(__FILE__) . 'assets/js/admin.js',
+        ['jquery'],
+        '1.0.0',
+        true
+    );
+    
+    // Localize script with data
+    wp_localize_script(
+        'mashry-connect-admin',
+        'mashryConnect',
+        [
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'rest_url' => rest_url('mashry-connect/v1/'),
+            'api_key' => MASHRY_CONNECT_API_KEY,
+            'nonce' => wp_create_nonce('mashry-connect-nonce')
+        ]
+    );
 });
 
 // Test server connection

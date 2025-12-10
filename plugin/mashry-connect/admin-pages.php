@@ -1,6 +1,17 @@
 <?php
 // admin-pages.php
+// Main settings page for Mashry Connect migration plugin
+// Implements hash-based change detection with incremental batch migration
 
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+/**
+ * Render the main settings page with migration interface
+ * Displays tabs for Products, Users, and Categories migration
+ * Includes batch processing, progress tracking, and data download functionality
+ */
 function mashry_connect_render_settings_page() {
     if (!current_user_can('manage_options')) {
         return;
@@ -10,12 +21,13 @@ function mashry_connect_render_settings_page() {
     ?>
     
     <div class="wrap">
-        <h1>mashry Connect</h1>
+        <h1>mashry Connect - WooCommerce Data Migration</h1>
         
+        <!-- Server Settings Section -->
         <div class="mashry-settings-form" style="background: #fff; padding: 20px; border: 1px solid #ccd0d4; margin-top: 30px; max-width: 600px; border-radius: 5px;">
             <h3 style="margin-top: 0;">Server Settings</h3>
             <form id="server-settings-form">
-                <label style="font-weight: 600; margin-bottom: 8px; display: block; color: #495057;">Server URL:</label>
+                <label style="font-weight: 600; margin-bottom: 8px; display: block; color: #495057;">External Server URL:</label>
                 <input type="url" id="server-url" name="server_url" 
                        value="<?php echo esc_attr($server_url); ?>" 
                        placeholder="http://localhost:5000" 
@@ -35,9 +47,12 @@ function mashry_connect_render_settings_page() {
             </form>
         </div>
 
+        <!-- Migration Container -->
         <div class="mashry-migration-container" style="margin-top: 40px; padding: 25px; background: #fff; border-radius: 5px; border: 1px solid #ccd0d4; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h2 style="color: #2271b1; margin-top: 0;">📦 Migration with Batch Processing</h2>
+            <h2 style="color: #2271b1; margin-top: 0;">📦 Migration with Change Detection</h2>
+            <p style="color: #6c757d; margin: 10px 0 20px 0;">This migration system uses SHA-256 hash comparison to detect data changes. Only changed items are migrated. Use "Force Export All" to re-export everything.</p>
             
+            <!-- Tab Navigation -->
             <div class="mashry-tab-container" style="margin: 20px 0;">
                 <div class="mashry-tab-buttons" style="display: flex; border-bottom: 2px solid #dee2e6; margin-bottom: -1px;">
                     <button class="mashry-tab-button active" data-tab="products" style="padding: 12px 24px; background: #f8f9fa; border: none; border-bottom: 3px solid #2271b1; cursor: pointer; font-size: 14px; font-weight: 600; color: #2271b1;">
@@ -84,8 +99,12 @@ function mashry_connect_render_settings_page() {
                                 📊 Check Status
                             </button>
                             
+                            <button class="button button-warning force-export-btn" data-type="products" id="btn-force-export-products" style="background: #ff9800; color: white; border: none; border-radius: 4px; padding: 10px 20px; font-size: 14px; font-weight: 500;">
+                                ⚡ Force Export All
+                            </button>
+                            
                             <button class="button button-secondary reset-migration-btn" data-type="products" id="btn-reset-migration-products">
-                                🔄 Reset Migration
+                                🗑️ Clear History
                             </button>
                             
                             <button class="button download-all-btn" data-type="products" style="background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; padding: 10px 20px; font-size: 14px; font-weight: 500;">
@@ -128,8 +147,12 @@ function mashry_connect_render_settings_page() {
                                 📊 Check Status
                             </button>
                             
+                            <button class="button button-warning force-export-btn" data-type="users" id="btn-force-export-users" style="background: #ff9800; color: white; border: none; border-radius: 4px; padding: 10px 20px; font-size: 14px; font-weight: 500;">
+                                ⚡ Force Export All
+                            </button>
+                            
                             <button class="button button-secondary reset-migration-btn" data-type="users" id="btn-reset-migration-users">
-                                🔄 Reset Migration
+                                🗑️ Clear History
                             </button>
                             
                             <button class="button download-all-btn" data-type="users" style="background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; padding: 10px 20px; font-size: 14px; font-weight: 500;">
@@ -172,8 +195,12 @@ function mashry_connect_render_settings_page() {
                                 📊 Check Status
                             </button>
                             
+                            <button class="button button-warning force-export-btn" data-type="categories" id="btn-force-export-categories" style="background: #ff9800; color: white; border: none; border-radius: 4px; padding: 10px 20px; font-size: 14px; font-weight: 500;">
+                                ⚡ Force Export All
+                            </button>
+                            
                             <button class="button button-secondary reset-migration-btn" data-type="categories" id="btn-reset-migration-categories">
-                                🔄 Reset Migration
+                                🗑️ Clear History
                             </button>
                             
                             <button class="button download-all-btn" data-type="categories" style="background: #ffc107; color: #212529; border: none; border-radius: 4px; cursor: pointer; padding: 10px 20px; font-size: 14px; font-weight: 500;">
@@ -184,6 +211,7 @@ function mashry_connect_render_settings_page() {
                 </div>
             </div>
             
+            <!-- Migration Progress Section -->
             <div id="migration-progress" style="display: none;">
                 <h3 style="color: #2271b1; border-bottom: 2px solid #2271b1; padding-bottom: 10px; margin-bottom: 20px;">Migration Progress - <span id="current-type"></span></h3>
                 <div style="background: #ddd; height: 20px; border-radius: 10px; margin: 15px 0; overflow: hidden;">
@@ -196,27 +224,30 @@ function mashry_connect_render_settings_page() {
     </div>
     
     <script>
-    // Global variables
-    let isMigrating = false;
+    // ============================================
+    // Global Configuration
+    // ============================================
+    let isMigrating = false; // Flag to prevent concurrent migrations
     
-    // Initialize when page loads
+    // ============================================
+    // Page Initialization
+    // ============================================
     document.addEventListener('DOMContentLoaded', function() {
-        // Set up event listeners
         setupEventListeners();
-        
-        // Load initial preview
         loadMigrationPreview('products');
     });
     
-    // Set up all event listeners
+    // ============================================
+    // Event Listener Setup
+    // ============================================
     function setupEventListeners() {
-        // Server settings form
+        // Server settings form submission
         document.getElementById('server-settings-form').addEventListener('submit', handleSettingsSubmit);
         
         // Test connection button
         document.getElementById('test-connection-btn').addEventListener('click', testServerConnection);
         
-        // Refresh preview buttons
+        // Refresh preview buttons for each type
         document.querySelectorAll('.refresh-preview-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const type = this.getAttribute('data-type');
@@ -228,7 +259,15 @@ function mashry_connect_render_settings_page() {
         document.querySelectorAll('.start-migration-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const type = this.getAttribute('data-type');
-                startMigration(type);
+                startMigration(type, false);
+            });
+        });
+        
+        // Force export all buttons - NEW
+        document.querySelectorAll('.force-export-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const type = this.getAttribute('data-type');
+                forceExportAll(type);
             });
         });
         
@@ -240,7 +279,7 @@ function mashry_connect_render_settings_page() {
             });
         });
         
-        // Reset migration buttons
+        // Reset migration buttons - now "Clear History"
         document.querySelectorAll('.reset-migration-btn').forEach(btn => {
             btn.addEventListener('click', function() {
                 const type = this.getAttribute('data-type');
@@ -256,7 +295,7 @@ function mashry_connect_render_settings_page() {
             });
         });
         
-        // Tab switching
+        // Tab switching buttons
         document.querySelectorAll('.mashry-tab-button').forEach(btn => {
             btn.addEventListener('click', function() {
                 const tabName = this.getAttribute('data-tab');
@@ -265,12 +304,20 @@ function mashry_connect_render_settings_page() {
         });
     }
     
-    // Tab switching function
+    // ============================================
+    // Tab Management
+    // ============================================
+    
+    /**
+     * Show/hide tab content and update button styling
+     */
     function showTab(tabName) {
         // Hide all tabs
         document.querySelectorAll('.mashry-tab-content').forEach(tab => {
             tab.style.display = 'none';
         });
+        
+        // Reset all tab buttons
         document.querySelectorAll('.mashry-tab-button').forEach(btn => {
             btn.style.background = '#f8f9fa';
             btn.style.borderBottomColor = 'transparent';
@@ -280,6 +327,8 @@ function mashry_connect_render_settings_page() {
         
         // Show selected tab
         document.getElementById(`tab-${tabName}`).style.display = 'block';
+        
+        // Style active tab button
         const activeBtn = document.querySelector(`.mashry-tab-button[data-tab="${tabName}"]`);
         activeBtn.style.background = 'white';
         activeBtn.style.borderBottomColor = '#2271b1';
@@ -290,7 +339,13 @@ function mashry_connect_render_settings_page() {
         loadMigrationPreview(tabName);
     }
     
-    // Handle server settings form submission
+    // ============================================
+    // Server Settings Management
+    // ============================================
+    
+    /**
+     * Handle server settings form submission
+     */
     function handleSettingsSubmit(e) {
         e.preventDefault();
         const serverUrl = document.getElementById('server-url').value;
@@ -317,7 +372,9 @@ function mashry_connect_render_settings_page() {
         });
     }
     
-    // Test server connection
+    /**
+     * Test connection to external server
+     */
     function testServerConnection() {
         const serverUrl = document.getElementById('server-url').value.trim();
         const testResultEl = document.getElementById('server-test-result');
@@ -349,12 +406,19 @@ function mashry_connect_render_settings_page() {
         });
     }
     
-    // Load migration preview
+    // ============================================
+    // Preview Loading & Rendering
+    // ============================================
+    
+    /**
+     * Load migration preview data from REST API
+     * Shows stats and sample items for each type
+     */
     function loadMigrationPreview(type) {
         const previewContent = document.getElementById(`preview-content-${type}`);
         previewContent.innerHTML = '<p style="text-align: center; color: #6c757d;">⏳ Loading preview...</p>';
         
-        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '?action=preview', {
+        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '/?action=preview', {
             headers: {
                 'Authorization': 'Bearer <?php echo MASHRY_CONNECT_API_KEY; ?>'
             }
@@ -368,7 +432,9 @@ function mashry_connect_render_settings_page() {
         });
     }
     
-    // Render preview data
+    /**
+     * Render preview stats and sample data table
+     */
     function renderPreview(type, data, previewContent) {
         let html = `
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px; background: white;">
@@ -408,7 +474,9 @@ function mashry_connect_render_settings_page() {
         previewContent.innerHTML = html;
     }
     
-    // Render sample table based on type
+    /**
+     * Render sample data table based on migration type
+     */
     function renderSampleTable(type, sampleData) {
         let headers = '';
         let rows = '';
@@ -441,8 +509,8 @@ function mashry_connect_render_settings_page() {
                 rows += `
                     <tr>
                         <td style="padding: 10px; border: 1px solid #dee2e6; color: #212529;"><code style="background: #f8f9fa; padding: 2px 6px; border-radius: 3px;">${item.id}</code></td>
-                        <td style="padding: 10px; border: 1px solid #dee2e6; color: #212529;"><strong>${item.user_login || 'N/A'}</strong></td>
-                        <td style="padding: 10px; border: 1px solid #dee2e6; color: #212529;">${item.user_email || 'N/A'}</td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; color: #212529;"><strong>${item.username || 'N/A'}</strong></td>
+                        <td style="padding: 10px; border: 1px solid #dee2e6; color: #212529;">${item.email || 'N/A'}</td>
                         <td style="padding: 10px; border: 1px solid #dee2e6; color: #212529;">${item.display_name || 'N/A'}</td>
                     </tr>
                 `;
@@ -463,10 +531,12 @@ function mashry_connect_render_settings_page() {
             });
         }
         
-        return `<table style="width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px; background: white;">${headers}${rows}</table>`;
+        return `<table style="width: 100%; border-collapse: collapse; margin: 15px 0; font-size: 14px; background: white;"><thead style="background: #f8f9fa;">${headers}</thead><tbody>${rows}</tbody></table>`;
     }
     
-    // Get status class
+    /**
+     * Get Bootstrap color class for post status
+     */
     function getStatusClass(status) {
         if (status === 'publish') return 'background: #d4edda; color: #155724;';
         if (status === 'draft') return 'background: #f8f9fa; color: #6c757d;';
@@ -474,24 +544,55 @@ function mashry_connect_render_settings_page() {
         return '';
     }
     
-    // Start migration
-    function startMigration(type) {
+    // ============================================
+    // Migration Execution
+    // ============================================
+    
+    /**
+     * Start normal migration (incremental with change detection)
+     */
+    function startMigration(type, forceExport) {
         if (isMigrating) {
             alert('⚠️ A migration is already in progress!');
             return;
         }
         
         const batchSize = document.getElementById(`batch-size-${type}`).value;
-        const forceRestart = confirm('Start migration from beginning?\n\nClick OK to restart from the beginning.\nClick Cancel to continue from where you left.');
+        const continueFromWhere = confirm('Continue from where you left off?\n\nClick OK to continue from previous position.\nClick Cancel to start from the beginning.');
         
+        performMigration(type, batchSize, !continueFromWhere);
+    }
+    
+    /**
+     * Force export all items regardless of change detection
+     * Sets flag to skip hash comparison during migration
+     */
+    function forceExportAll(type) {
+        if (isMigrating) {
+            alert('⚠️ A migration is already in progress!');
+            return;
+        }
+        
+        if (!confirm(`Force re-export all ${type}?\n\nThis will re-export every ${type} item even if data hasn't changed.\n\nAre you sure?`)) {
+            return;
+        }
+        
+        const batchSize = document.getElementById(`batch-size-${type}`).value;
+        performMigration(type, batchSize, true);
+    }
+    
+    /**
+     * Perform the actual migration with given parameters
+     */
+    function performMigration(type, batchSize, forceExport) {
         // Show progress section
         document.getElementById('migration-progress').style.display = 'block';
         document.getElementById('current-type').textContent = type.charAt(0).toUpperCase() + type.slice(1);
         
-        // Start migration
         isMigrating = true;
         
-        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '?action=start_migration&batch_size=' + batchSize + '&force_restart=' + forceRestart, {
+        // FIXED: Added / before ?action query string
+        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '/?action=start_migration&batch_size=' + batchSize + '&force_restart=' + forceExport, {
             headers: {
                 'Authorization': 'Bearer <?php echo MASHRY_CONNECT_API_KEY; ?>'
             }
@@ -500,7 +601,6 @@ function mashry_connect_render_settings_page() {
         .then(data => {
             if (data.success) {
                 alert('Migration started! Total items: ' + data.total);
-                // Start processing batches
                 processNextBatch(type, 1, batchSize);
             } else {
                 alert('Failed to start migration: ' + (data.message || 'Unknown error'));
@@ -513,13 +613,17 @@ function mashry_connect_render_settings_page() {
         });
     }
     
-    // Process next batch
+    /**
+     * Process batches sequentially
+     * Calls migrate_batch endpoint and waits for completion before next batch
+     */
     function processNextBatch(type, batchNumber, batchSize) {
         if (!isMigrating) return;
         
         updateProgressText(`Processing ${type} batch ${batchNumber}`);
         
-        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '?action=migrate_batch&batch=' + batchNumber + '&batch_size=' + batchSize, {
+        // FIXED: Added / before ?action query string
+        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '/?action=migrate_batch&batch=' + batchNumber + '&batch_size=' + batchSize, {
             headers: {
                 'Authorization': 'Bearer <?php echo MASHRY_CONNECT_API_KEY; ?>'
             }
@@ -528,32 +632,39 @@ function mashry_connect_render_settings_page() {
         .then(data => {
             if (data.success) {
                 const migratedCount = data[`${type}_migrated`] || 0;
+                const skippedCount = data[`${type}_skipped`] || 0;
                 const totalItems = data.total_items || 0;
                 const totalMigrated = data.total_migrated || 0;
                 
-                // Calculate progress percentage
+                // Calculate and update progress percentage
                 const progressPercentage = totalItems > 0 ? Math.round((totalMigrated / totalItems) * 100) : 0;
                 updateProgressBar(progressPercentage);
                 
+                // Log skipped items if any
+                if (skippedCount > 0) {
+                    console.log(`Batch ${batchNumber}: ${migratedCount} migrated, ${skippedCount} skipped (data unchanged)`);
+                }
+                
+                // Handle migrated items: send to server and download locally
                 if (migratedCount > 0) {
-                    // Send data to server AND download locally
                     const itemsData = data[`${type}_data`];
                     if (itemsData && itemsData.length > 0) {
-                        // 1. Try to send to server
+                        // 1. Try to send to configured server
                         sendBatchToServer(type, itemsData, batchNumber);
                         
-                        // 2. Always download locally
+                        // 2. Always download locally as backup
                         downloadBatchLocally(type, itemsData, batchNumber);
                     }
                 }
                 
-                // Check if there are more batches
+                // Check if more batches are available
                 if (data.has_more) {
-                    // Wait 1 second before next batch
+                    // Wait 1 second before processing next batch to avoid server overload
                     setTimeout(() => {
                         processNextBatch(type, batchNumber + 1, batchSize);
                     }, 1000);
                 } else {
+                    // All batches processed, mark migration as complete
                     migrationComplete(type);
                 }
             } else {
@@ -567,7 +678,10 @@ function mashry_connect_render_settings_page() {
         });
     }
     
-    // Send batch to server
+    /**
+     * Send batch data to configured external server
+     * Uses POST request with JSON content type
+     */
     function sendBatchToServer(type, itemsData, batchNumber) {
         const serverUrl = document.getElementById('server-url').value.trim();
         
@@ -593,7 +707,10 @@ function mashry_connect_render_settings_page() {
         });
     }
     
-    // Download batch locally
+    /**
+     * Download batch data locally as JSON file
+     * Creates timestamped filename for easy tracking
+     */
     function downloadBatchLocally(type, itemsData, batchNumber) {
         const dataStr = JSON.stringify(itemsData, null, 2);
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
@@ -602,9 +719,13 @@ function mashry_connect_render_settings_page() {
         downloadJsonFile(dataStr, fileName);
     }
     
-    // Download all data
+    /**
+     * Download all data at once (not batched)
+     * Calls get_all endpoint for complete data export
+     */
     function downloadAllData(type) {
-        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '?action=get_all', {
+        // FIXED: Added / before ?action query string
+        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '/?action=get_all', {
             headers: {
                 'Authorization': 'Bearer <?php echo MASHRY_CONNECT_API_KEY; ?>'
             }
@@ -623,7 +744,9 @@ function mashry_connect_render_settings_page() {
         });
     }
     
-    // Download JSON file
+    /**
+     * Create blob and trigger download for JSON file
+     */
     function downloadJsonFile(dataStr, fileName) {
         const blob = new Blob([dataStr], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
@@ -636,9 +759,17 @@ function mashry_connect_render_settings_page() {
         URL.revokeObjectURL(url);
     }
     
-    // Check migration status
+    // ============================================
+    // Status & Management Functions
+    // ============================================
+    
+    /**
+     * Check current migration status
+     * Displays stats including total, migrated, failed, and progress percentage
+     */
     function checkMigrationStatus(type) {
-        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '?action=migration_status', {
+        // FIXED: Added / before ?action query string
+        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '/?action=migration_status', {
             headers: {
                 'Authorization': 'Bearer <?php echo MASHRY_CONNECT_API_KEY; ?>'
             }
@@ -675,8 +806,6 @@ function mashry_connect_render_settings_page() {
             `;
             
             statusDiv.innerHTML = html;
-            
-            // Update the preview
             loadMigrationPreview(type);
         })
         .catch(error => {
@@ -684,13 +813,18 @@ function mashry_connect_render_settings_page() {
         });
     }
     
-    // Reset migration
+    /**
+     * Reset/Clear migration tracking data
+     * Deletes all records from migration_tracking table for specific type
+     * Allows starting completely fresh (not recommended for incremental migration)
+     */
     function resetMigration(type) {
-        if (!confirm('Are you sure you want to reset migration?\n\nThis will delete all tracking data and you will need to start over.')) {
+        if (!confirm(`Clear all ${type} migration history?\n\nThis will delete all tracking data. Next migration will treat all items as new.\n\nAre you sure?`)) {
             return;
         }
         
-        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '?action=reset_migration', {
+        // FIXED: Added / before ?action query string
+        fetch('<?php echo rest_url("mashry-connect/v1/export/"); ?>' + type + '/?action=reset_migration', {
             headers: {
                 'Authorization': 'Bearer <?php echo MASHRY_CONNECT_API_KEY; ?>'
             }
@@ -698,24 +832,26 @@ function mashry_connect_render_settings_page() {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert(`${type.charAt(0).toUpperCase() + type.slice(1)} migration reset successfully!`);
+                alert(`${type.charAt(0).toUpperCase() + type.slice(1)} migration history cleared successfully!`);
                 loadMigrationPreview(type);
                 
-                // Clear progress
+                // Clear progress display
                 document.getElementById('migration-progress').style.display = 'none';
                 document.getElementById('batch-status').innerHTML = '';
                 updateProgressBar(0);
                 updateProgressText('');
             } else {
-                alert(`Error resetting migration: ${data.message || 'Unknown error'}`);
+                alert(`Error clearing history: ${data.message || 'Unknown error'}`);
             }
         })
         .catch(error => {
-            alert(`Error resetting migration: ${error.message}`);
+            alert(`Error clearing history: ${error.message}`);
         });
     }
     
-    // Migration complete
+    /**
+     * Mark migration as complete and show final status
+     */
     function migrationComplete(type) {
         isMigrating = false;
         updateProgressBar(100);
@@ -723,14 +859,23 @@ function mashry_connect_render_settings_page() {
         
         alert(`🎉 ${type.charAt(0).toUpperCase() + type.slice(1)} migration completed successfully!`);
         
-        // Final status check
         checkMigrationStatus(type);
     }
     
+    // ============================================
+    // UI Update Functions
+    // ============================================
+    
+    /**
+     * Update progress bar width
+     */
     function updateProgressBar(percentage) {
         document.getElementById('progress-bar').style.width = percentage + '%';
     }
     
+    /**
+     * Update progress text display
+     */
     function updateProgressText(text) {
         document.getElementById('progress-text').innerHTML = text;
     }

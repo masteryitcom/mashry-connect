@@ -18,10 +18,11 @@ function mashry_connect_export_categories(WP_REST_Request $request) {
             $force_restart = isset($params['force_restart']) ? (bool)$params['force_restart'] : false;
             return rest_ensure_response(mashry_connect_start_migration('categories', $batch_size, $force_restart));
             
-        case 'migrate_batch':
-            $batch_number = isset($params['batch']) ? (int)$params['batch'] : 1;
-            $batch_size = isset($params['batch_size']) ? (int)$params['batch_size'] : 500;
-            return rest_ensure_response(mashry_connect_migrate_batch('categories', $batch_number, $batch_size));
+case 'migrate_batch':
+    $batch_number = isset($params['batch']) ? (int)$params['batch'] : 1;
+    $batch_size = isset($params['batch_size']) ? (int)$params['batch_size'] : 500;
+    $force_restart = isset($params['force_restart']) ? (bool)$params['force_restart'] : false;
+    return rest_ensure_response(mashry_connect_migrate_batch('categories', $batch_number, $batch_size, $force_restart));
             
         case 'migration_status':
             return rest_ensure_response(mashry_connect_get_migration_status('categories'));
